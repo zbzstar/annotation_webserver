@@ -273,8 +273,9 @@
         Material icons downloaded from https://material.io/icons
       -->
     <!--add by zbz-->
-    <div id="dataid" d="{{image_urls}}" style="display:none"> > </div>
-    <div id="data_mark" d="{{image_marks}}" style="display:none"> > </div>
+    <div id="image_urls_id" d="{{image_urls}}" style="display:none"> > </div>
+    <div id="image_mark_id" d="{{image_marks}}" style="display:none"> > </div>
+    <!--end add by zbz-->
 
     <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
@@ -975,6 +976,10 @@ POSSIBILITY OF SUCH DAMAGE.
          items like Keyboard Shortcut hidden under the attributes panel -->
     <div style="width: 100%;" id="vertical_space"></div>
 
+    add by zbz
+    <script src="http://code.jquery.com/jquery-1.5.2.min.js" type="text/javascript"></script>
+    end add by zbz
+
     <script type="text/javascript">
       //<!--AUTO_INSERT_VIA_DEMO_JS_HERE-->
 /*
@@ -1008,6 +1013,9 @@ POSSIBILITY OF SUCH DAMAGE.
 function _via_load_submodules() {
   _via_wikimedia_demo_load_img();
   _via_wikimedia_demo_import_sample_annotations();
+  // add by zbz
+  _zbz_load_image_marks(image_marks)
+  // end add by zbz
 }
 
 function _via_wikimedia_demo_load_img() {
@@ -1025,23 +1033,33 @@ function _via_wikimedia_demo_load_img() {
 }
 
 function _via_wikimedia_demo_import_sample_annotations() {
-  annotations_csv = 'filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes\nhttps://upload.wikimedia.org/wikipedia/commons/9/91/%22Broke%2C_baby_sick%2C_and_car_trouble%21%22_-_Dorothea_Lange%27s_photo_of_a_Missouri_family_of_five_in_the_vicinity_of_Tracy%2C_California.jpg,-1,"{""wikimedia_url"":""https://commons.wikimedia.org/wiki/File:%22Broke,_baby_sick,_and_car_trouble!%22_-_Dorothea_Lange%27s_photo_of_a_Missouri_family_of_five_in_the_vicinity_of_Tracy,_California.jpg""}",3,1,"{""name"":""rect"",""x"":1177,""y"":1763,""width"":732,""height"":1063}","{""name"":""woman""}"';
-
+  annotations_csv = 'filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes';
+//
+https://upload.wikimedia.org/wikipedia/commons/9/91/%22Broke%2C_baby_sick%2C_and_car_trouble%21%22_-_Dorothea_Lange%27s_photo_of_a_Missouri_family_of_five_in_the_vicinity_of_Tracy%2C_California.jpg,-1,"{""wikimedia_url"":""https://commons.wikimedia.org/wiki/File:%22Broke,_baby_sick,_and_car_trouble!%22_-_Dorothea_Lange%27s_photo_of_a_Missouri_family_of_five_in_the_vicinity_of_Tracy,_California.jpg""}",3,1,"{""name"":""rect"",""x"":1177,""y"":1763,""width"":732,""height"":1063}","{""name"":""woman""}"
 // https://upload.wikimedia.org/wikipedia/commons/9/91/%22Broke%2C_baby_sick%2C_and_car_trouble%21%22_-_Dorothea_Lange%27s_photo_of_a_Missouri_family_of_five_in_the_vicinity_of_Tracy%2C_California.jpg,-1,"{""wikimedia_url"":""https://commons.wikimedia.org/wiki/File:%22Broke,_baby_sick,_and_car_trouble!%22_-_Dorothea_Lange%27s_photo_of_a_Missouri_family_of_five_in_the_vicinity_of_Tracy,_California.jpg""}",3,2,"{""name"":""rect"",""x"":1640,""y"":2490,""width"":369,""height"":624}","{""name"":""baby""}"
 
   import_annotations_from_csv(annotations_csv);
   _via_settings.ui.image.region_label = 'name';
 }
 
+// add by zbz
+function _zbz_load_image_marks(data) {
+  import_annotations_from_json(data)
+}
+// end add by zbz
+
 // Wikimedia Commons featured pictures list
 // https://commons.wikimedia.org/wiki/Commons:Featured_pictures
 
+// add by zbz
+var image_urls = document.getElementById('image_urls_id').getAttribute('d')
+var image_marks = document.getElementById('image_mark_id').getAttribute('d')
 
-var js_data = document.getElementById('dataid').getAttribute('d')
+var urls_json = JSON.parse(image_urls)
+// end add by zbz
 
-var str = JSON.parse(js_data)
 // alert(str['urls'])
-var _via_demo_wikimedia_commons_featured_img_list = str['urls']
+var _via_demo_wikimedia_commons_featured_img_list = urls_json['urls']
 
     </script>
     <script type="text/javascript">
@@ -1582,10 +1600,40 @@ function download_all_region_data(type) {
   save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
 }
 
+// add by zbz
+function post_img_meta_data() {
+  $.ajax({
+                type: 'POST',
+                url: "http://localhost:5200/jl_ai/annotation",
+                dataType: "json",
+                headers: {
+                    'Content-Type': 'application/json;charset=UTF-8'
+                },
+                data: JSON.stringify(_via_img_metadata)
+                // _via_img_metadata
+
+                // crossDomain:true,
+                // xhrFields:{ withCredentials: true},
+                // success: function (data) {
+                //     console.log( data)
+                //     // $("#msg").text(JSON.stringify(data, null, 4));
+                // }
+            });
+
+}
+
+
 function sel_local_data_file(type) {
   if (invisible_file_input) {
     switch(type) {
     case 'annotations':
+      // add by zbz
+      console.log("test zbz")
+      post_img_meta_data()
+      // console.log(_via_img_metadata)
+      return
+      // end by zbz
+
       invisible_file_input.accept='.csv,.json';
       invisible_file_input.onchange = import_annotations_from_file;
       break;

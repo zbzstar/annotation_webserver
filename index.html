@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试POST</title>
+</head>
+<body>
+<script src="http://code.jquery.com/jquery-1.5.2.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    $(function () {
+        var token = ''
+        var json = {
+            "userName": "sys",
+            "userPassword": "123456"
+        }
+
+        $("#msg").width($("body").width()).height(300).css("border", "1px solid gray");
+
+        accessToken()
+
+        function accessToken() {
+            $.ajax({
+                type: 'GET',
+                url: "http://localhost:8080/auth-api/rest/ctx/test",
+                dataType: "json",
+                headers: {
+                    'Content-Type': 'application/json;charset=UTF-8'
+                },
+                // crossDomain:true,
+                // xhrFields:{ withCredentials: true},
+                success: function (data) {
+                    token = data.data.accessToken
+                    $("#msg").text(JSON.stringify(data, null, 4));
+                }
+            });
+        }
+        function analysis() {
+            $.ajax({
+                type: 'GET',
+                url: "http://localhost:8080/cvs-api/rest/analysis/dashboard/test",
+                dataType: "json",
+                // crossDomain:true,
+                // xhrFields:{ withCredentials: true},
+                success: function (data) {
+                    $("#msg").text(JSON.stringify(data, null, 4));
+                }
+            });
+        }
+
+        $("#accessToken").click(accessToken)
+        $("#analysis").click(analysis)
+    });
+</script>
+<input id="accessToken" type="submit" value="令牌">
+<input id="analysis" type="submit" value="分析">
+<textarea id="msg"/>
+</body>
+</html>
