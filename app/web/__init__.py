@@ -5,6 +5,7 @@
 from flask import Blueprint
 from flask import render_template
 
-web = Blueprint('web', __name__)
+web = Blueprint('web', __name__)  # __name__ 指明蓝图所在包
 
 from app.web import annotation
+from app.web import auth

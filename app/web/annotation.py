@@ -3,88 +3,85 @@
 # @Author : zbz
 import json
 
-from flask import render_template, jsonify, request
-from . import web
+from flask import render_template, jsonify, request, current_app
+from flask_login import login_required,current_user
 
-@web.route('/jl_ai/annotation', methods=['GET', 'POST'])
+from app import db
+from app.models.image import Image
+from app.models.work import Work
+from app.models.user import User
+from . import web
+# from flask.ext.login import current_user
+
+
+@web.route('/annotation', methods=['GET', 'POST'])
+# @login_required
 def annotaion():
-    # data={}
+
     if request.method == 'POST':
         # data = request.data.decode()  # change byte to str
         data = str(request.data, encoding='utf-8')
         print("get post")
         json_data = json.loads(data)  # load str as json
-        # print(json.loads(data))
-        print(json_data.keys())
+        # print(json_data)
 
-    image_urls = {
-        "urls": [
-            'http://localhost/images/1.jpeg',
-            'http://localhost/images/2.png',
-            'http://localhost/images/3.png'
-        ]
-    }
-    # image_urls = {
-    #     "urls": [
-    #         'http://222.128.6.153:8008/images/1.jpeg',
-    #         'http://222.128.6.153:8008/images/2.png',
-    #         'http://222.128.6.153:8008/images/3.png'
-    #     ]
-    # }
+        for key in json_data:
+            filename = json_data[key]['filename'].split('/')
+            # print("img_name:", filename[-1])
+            # print("img_path", '/'.join(filename[3:-1]))
+            for anno in json_data[key]['regions']:
+                print(anno)
+                with db.auto_commit():
+                    image = Image()
+                    image.img_name = filename[-1]
+                    image.img_path = str('/'.join(filename[3:]))
+                    image.anno_string = str(anno['shape_attributes'])
+                    image.anno_type = anno['shape_attributes']['name']
+                    image.tag = anno['region_attributes']['name']
+                    db.session.add(image)
 
-    image_urls_json = json.dumps((image_urls))
-    image_marks = {
-        "http://localhost/images/1.jpeg-1": {
-            "filename": "http://localhost/images/1.jpeg",
-            "size": -1,
-            "regions": [
-                {
-                    "shape_attributes": {"name": "rect", "x": 144, "y": 260, "width": 65, "height": 170},
-                    "region_attributes": {"name": "1"}
-                },
-                {
-                    "shape_attributes": {"name": "rect", "x": 223, "y": 259, "width": 39, "height": 184},
-                    "region_attributes": {"name": "2"}
-                },
-                {
-                    "shape_attributes": {"name": "rect", "x": 384, "y": 269, "width": 56, "height": 166},
-                    "region_attributes": {"name": "3"}
-                },
-                {
-                    "shape_attributes": {"name": "rect", "x": 321, "y": 274, "width": 59, "height": 161},
-                    "region_attributes": {"name": "3"}
-                },
-                {
-                    "shape_attributes": {"name": "rect", "x": 275, "y": 259, "width": 48, "height": 181},
-                    "region_attributes": {"name": "3"}
-                }
-            ],
-            "file_attributes": {}
-        },
-        "http://localhost/images/2.png-1": {
-            "filename": "http://localhost/images/2.png",
-            "size": -1,
-            "regions": [
-                {
-                    "shape_attributes": {"name": "rect", "x": 163, "y": 235, "width": 50, "height": 137},
-                    "region_attributes": {"name": "2"}
-                },
-                {
-                    "shape_attributes": {"name": "rect", "x": 327, "y": 231, "width": 72, "height": 141},
-                    "region_attributes": {"name": "3"}
-                }
-            ],
-            "file_attributes": {}
-        }
-    }
+    uid = 1 # current_user.id
+    image_pathes = db.session.query(Work.img_path).filter_by(uid=uid).all()
+    image_server = current_app.config['IMAGE_SERVER']
+
+    image_urls = {}
+    image_marks = {}
+    tmp_url = []
+    for path in image_pathes:
+        # get image_urls info
+        url = image_server + path[0]
+        tmp_url.append(url)
+
+        # get image_marks info
+        mask_key = url + "-1"
+        mark_info = {}
+        mark_info['filename'] = url
+        mark_info['size'] = -1
+        mark_info['file_attributes'] = {}
+        mark_info['regions'] = []
+        anno_strings = db.session.query(
+                            Image.anno_string, Image.tag, Image.id).filter_by(
+                            img_path=path[0], anno_type='rect').all()
+        for anno in anno_strings:
+            anno_info={}
+            anno_info['shape_attributes'] = eval(anno[0])
+            anno_info['region_attributes'] = {"name": anno[1]}
+            anno_info['id'] = anno[2]
+            mark_info['regions'].append(anno_info)
+        image_marks[mask_key] = mark_info
+
+    image_urls['urls'] = tmp_url
+
+
     # image_marks = {
-    #     "http://222.128.6.153:8008/images/1.jpeg-1": {
-    #         "filename": "http://222.128.6.153:8008/images/1.jpeg",
+    #     "http://localhost/images/1.jpeg-1": {
+    #         "filename": "http://localhost/images/1.jpeg",
     #         "size": -1,
     #         "regions": [
     #             {
     #                 "shape_attributes": {"name": "rect", "x": 144, "y": 260, "width": 65, "height": 170},
-    #                 "region_attributes": {"name": "1"}
+    #                 "region_attributes": {"name": "1"},
+    #                 "id": "123456"
     #             },
     #             {
     #                 "shape_attributes": {"name": "rect", "x": 223, "y": 259, "width": 39, "height": 184},
@@ -104,29 +101,38 @@ def annotaion():
     #             }
     #         ],
     #         "file_attributes": {}
-    #     },
-    #     "http://222.128.6.153:8008/images/2.png-1": {
-    #         "filename": "http://222.128.6.153:8008/images/2.png",
-    #         "size": -1,
-    #         "regions": [
-    #             {
-    #                 "shape_attributes": {"name": "rect", "x": 163, "y": 235, "width": 50, "height": 137},
-    #                 "region_attributes": {"name": "2"}
-    #             },
-    #             {
-    #                 "shape_attributes": {"name": "rect", "x": 327, "y": 231, "width": 72, "height": 141},
-    #                 "region_attributes": {"name": "3"}
-    #             }
-    #         ],
-    #         "file_attributes": {}
     #     }
-    # }
-    image_marks_json = json.dumps(image_marks)
-    # print(str)
-    return render_template('via_wikimedia_demo.html', image_urls=image_urls_json, image_marks=image_marks_json)
 
-@web.route('/jl_ai/annotations', methods =['GET','POST'] )
+    image_urls_json = json.dumps(image_urls)
+    image_marks_json = json.dumps(image_marks)
+
+    return render_template('via_wikimedia_demo.html',
+                           image_urls=image_urls_json,
+                           image_marks=image_marks_json)
+
+
+# @login_required
+@web.route('/add', methods=['GET', 'POST'])
 def test():
-    if request.method == 'POST':
-        print("get post")
-    return render_template('index.html')
+    # if request.method == 'POST':
+    print("add work for current user")
+    tmp_add_work()
+    return render_template('via_demo.html')
+
+
+def tmp_add_work():
+    uid = 1 #current_user.id
+    img_pathes = get_all_img_path()
+    for path in img_pathes:
+        print("path0", path[0])
+        with db.auto_commit():
+            work = Work()
+            work.uid = uid
+            work.img_path = path[0]
+            db.session.add(work)
+
+
+def get_all_img_path():
+    img_pathes = db.session.query(Image.img_path).distinct().all()  #distinct() 去重
+    print("image_pathes:",img_pathes)
+    return img_pathes
