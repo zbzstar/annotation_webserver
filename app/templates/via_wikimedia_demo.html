@@ -1383,7 +1383,10 @@ function file_metadata(filename, size) {
 
 function file_region() {
   this.shape_attributes  = {}; // region shape attributes
-  this.region_attributes = {}; // region attributes
+  this.region_attributes = {}; // region attribut
+  // add by zbz
+  this.id = 0
+  //end add
 }
 
 //
@@ -1915,6 +1918,9 @@ function import_annotations_from_json(data) {
             _via_attributes['region'][key] = { 'type':'text' };
           }
         }
+        // add by zbz
+        region_i.id =  regions[i].id
+        //end add
 
         // add regions only if they are present
         if ( Object.keys(region_i.shape_attributes).length > 0 ||

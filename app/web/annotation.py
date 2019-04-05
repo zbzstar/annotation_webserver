@@ -13,9 +13,10 @@ from app.models.user import User
 from . import web
 # from flask.ext.login import current_user
 
+raw_region_id = []
 
 @web.route('/annotation', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def annotaion():
 
     if request.method == 'POST':
@@ -25,22 +26,40 @@ def annotaion():
         json_data = json.loads(data)  # load str as json
         # print(json_data)
 
+        tmp_raw_region_id = raw_region_id
         for key in json_data:
             filename = json_data[key]['filename'].split('/')
-            # print("img_name:", filename[-1])
-            # print("img_path", '/'.join(filename[3:-1]))
-            for anno in json_data[key]['regions']:
-                print(anno)
-                with db.auto_commit():
-                    image = Image()
-                    image.img_name = filename[-1]
-                    image.img_path = str('/'.join(filename[3:]))
-                    image.anno_string = str(anno['shape_attributes'])
-                    image.anno_type = anno['shape_attributes']['name']
-                    image.tag = anno['region_attributes']['name']
-                    db.session.add(image)
 
-    uid = 1 # current_user.id
+            for anno in json_data[key]['regions']:
+                # print(anno)
+                if anno['id'] == 0:  # add new region
+                    print(anno)
+                    with db.auto_commit():
+                        image = Image()
+                        image.img_name = filename[-1]
+                        image.img_path = str('/'.join(filename[3:]))
+                        image.anno_string = str(anno['shape_attributes'])
+                        image.anno_type = anno['shape_attributes']['name']
+                        image.tag = anno['region_attributes']['name']
+                        db.session.add(image)
+                else:
+                    if anno['id'] in tmp_raw_region_id:
+                        tmp_raw_region_id.remove(anno['id'])   # 返回
+                    else:
+                        print("error...")
+                    with db.auto_commit():
+                        image = Image.query.get_or_404(anno['id'])
+                        image.anno_string = str(anno['shape_attributes'])
+                        image.anno_type = anno['shape_attributes']['name']
+                        image.tag = anno['region_attributes']['name']
+
+        if tmp_raw_region_id:  # 有删除的标记
+            for r_id in tmp_raw_region_id:
+                with db.auto_commit():
+                    image = Image.query.get_or_404(r_id)
+                    image.status = 0
+
+    uid = current_user.id
     image_pathes = db.session.query(Work.img_path).filter_by(uid=uid).all()
     image_server = current_app.config['IMAGE_SERVER']
 
@@ -61,13 +80,15 @@ def annotaion():
         mark_info['regions'] = []
         anno_strings = db.session.query(
                             Image.anno_string, Image.tag, Image.id).filter_by(
-                            img_path=path[0], anno_type='rect').all()
+                            img_path=path[0], anno_type='rect', status=1).all()
+        # 拼接标记字典
         for anno in anno_strings:
             anno_info={}
             anno_info['shape_attributes'] = eval(anno[0])
             anno_info['region_attributes'] = {"name": anno[1]}
             anno_info['id'] = anno[2]
             mark_info['regions'].append(anno_info)
+            raw_region_id.append(anno[2])  # 保存原始任务id
         image_marks[mask_key] = mark_info
 
     image_urls['urls'] = tmp_url
@@ -124,7 +145,6 @@ def tmp_add_work():
     uid = 1 #current_user.id
     img_pathes = get_all_img_path()
     for path in img_pathes:
-        print("path0", path[0])
         with db.auto_commit():
             work = Work()
             work.uid = uid
