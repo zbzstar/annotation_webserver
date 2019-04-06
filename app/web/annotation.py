@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 # @Time : 3/19/19 3:51 PM
 # @Author : zbz
+from datetime import datetime
 import json
 
 from flask import render_template, jsonify, request, current_app
@@ -14,6 +15,7 @@ from . import web
 # from flask.ext.login import current_user
 
 raw_region_id = []
+
 
 @web.route('/annotation', methods=['GET', 'POST'])
 @login_required
@@ -40,27 +42,36 @@ def annotaion():
                         image.img_path = str('/'.join(filename[3:]))
                         image.anno_string = str(anno['shape_attributes'])
                         image.anno_type = anno['shape_attributes']['name']
-                        image.tag = anno['region_attributes']['name']
+                        # keys = anno['region_attributes'].keys
+                        # for tmp_key in  anno['region_attributes']:
+                        if anno['region_attributes']:
+                            image.tag = anno['region_attributes']['name']
+                        else:
+                            image.tag = "Default"
                         db.session.add(image)
                 else:
-                    if anno['id'] in tmp_raw_region_id:
-                        tmp_raw_region_id.remove(anno['id'])   # 返回
+                    if anno['id'] in raw_region_id:
+                        raw_region_id.remove(anno['id'])   # 有返回，未被删除
+                        with db.auto_commit():
+                            image = Image.query.get_or_404(anno['id'])
+                            image.anno_string = str(anno['shape_attributes'])
+                            image.anno_type = anno['shape_attributes']['name']
+                            image.tag = anno['region_attributes']['name']
+                            image.update_time = int(datetime.now().timestamp())
                     else:
-                        print("error...")
-                    with db.auto_commit():
-                        image = Image.query.get_or_404(anno['id'])
-                        image.anno_string = str(anno['shape_attributes'])
-                        image.anno_type = anno['shape_attributes']['name']
-                        image.tag = anno['region_attributes']['name']
+                        print("error... 有多次提交 复制导致错误")
 
-        if tmp_raw_region_id:  # 有删除的标记
-            for r_id in tmp_raw_region_id:
+        if raw_region_id:  # 有标记被删除
+            for r_id in raw_region_id:
+                raw_region_id.remove(r_id)
                 with db.auto_commit():
                     image = Image.query.get_or_404(r_id)
                     image.status = 0
+                    image.update_time = int(datetime.now().timestamp())
 
     uid = current_user.id
     image_pathes = db.session.query(Work.img_path).filter_by(uid=uid).all()
+
     image_server = current_app.config['IMAGE_SERVER']
 
     image_urls = {}
@@ -88,11 +99,11 @@ def annotaion():
             anno_info['region_attributes'] = {"name": anno[1]}
             anno_info['id'] = anno[2]
             mark_info['regions'].append(anno_info)
-            raw_region_id.append(anno[2])  # 保存原始任务id
+            if not anno[2] in raw_region_id:
+                raw_region_id.append(anno[2])  # 保存任务id
         image_marks[mask_key] = mark_info
 
     image_urls['urls'] = tmp_url
-
 
     # image_marks = {
     #     "http://localhost/images/1.jpeg-1": {
@@ -142,17 +153,18 @@ def test():
 
 
 def tmp_add_work():
-    uid = 1 #current_user.id
+    uid = current_user.id
     img_pathes = get_all_img_path()
-    for path in img_pathes:
-        with db.auto_commit():
-            work = Work()
-            work.uid = uid
-            work.img_path = path[0]
-            db.session.add(work)
+    # for path in img_pathes:
+    with db.auto_commit():
+        work = Work()
+        work.uid = uid
+        work.img_path = '4.jpeg'
+        work.anno_type = 'rect'
+        db.session.add(work)
 
 
 def get_all_img_path():
     img_pathes = db.session.query(Image.img_path).distinct().all()  #distinct() 去重
-    print("image_pathes:",img_pathes)
+    print("image_pathes:", img_pathes)
     return img_pathes

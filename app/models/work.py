@@ -15,6 +15,7 @@ class Work(Base):
     uid = Column(Integer, ForeignKey('user.id'))
     # image = relationship(Image)
     img_path = Column(String(200), nullable=True)
+    anno_type = Column(String(20), nullable=True)
 
     @classmethod
     def get_user_work(cls, uid):
