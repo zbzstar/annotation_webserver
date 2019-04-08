@@ -273,8 +273,9 @@
         Material icons downloaded from https://material.io/icons
       -->
     <!--add by zbz-->
-    <div id="image_urls_id" d="{{image_urls}}" style="display:none"> > </div>
+{#    <div id="image_urls_id" d="{{image_urls}}" style="display:none"> > </div>#}
     <div id="image_mark_id" d="{{image_marks}}" style="display:none"> > </div>
+    <div id="contral_id" d="{{contral}}" style="display:none"> > </div>
     <!--end add by zbz-->
 
     <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -489,8 +490,9 @@
         -->
 
         <svg onclick="sel_local_data_file('annotations')" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_fileupload"></use><title>Import Annotations from CSV</title></svg>
-        <svg onclick="download_all_region_data('csv')" viewbox="0 0 24 24"><use xlink:href="#icon_filedownload"></use><title>Download Annotations as CSV</title></svg>
-
+{#          change by zbz#}
+{#        <svg onclick="download_all_region_data('csv')" viewbox="0 0 24 24"><use xlink:href="#icon_filedownload"></use><title>Download Annotations as CSV</title></svg>#}
+{#end change#}
         <svg onclick="image_grid_toggle()" id="toolbar_image_grid_toggle" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_gridon"></use><title>Switch to Image Grid View</title></svg>
         <svg onclick="annotation_editor_toggle_all_regions_editor()" viewbox="0 0 24 24"><use xlink:href="#icon_insertcomment"></use><title>Toggle Annotation Editor</title></svg>
 
@@ -507,8 +509,25 @@
         <svg onclick="paste_to_multiple_images_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_pasten"></use><title>Paste Region in Multiple Images</title></svg>
         <svg onclick="del_sel_regions_with_confirm()" viewbox="0 0 24 24"><use xlink:href="#icon_pasteundo"></use><title>Undo Regions Pasted in Multiple Images</title></svg>
         <svg onclick="del_sel_regions()" viewbox="0 0 24 24"><use xlink:href="#icon_close"></use><title>Delete Region</title></svg>
+
+
+
       </div>
       <!-- end of shortcut toolbar -->
+
+      <div class="longinfo">
+            {#          add by zbz#}
+        {#加入href =”javascript:return false;” 可以实现不可点击功能 #}
+        {#加入style=”opacity: 0.2”可以实现变灰的效果#}
+         <a href="/personal" style="color: white; Font-size:10px;white-space:nowrap">
+            {{nickname}} 的任务页
+         </a>
+         <a href="/logout" style="color: white; Font-size:10px;white-space:nowrap">
+            注销
+         </a>
+{#          end add #}
+      </div>
+
       <input type="file" id="invisible_file_input" name="files[]" style="display:none">
     </div> <!-- endof #top_panel -->
 
@@ -1052,10 +1071,13 @@ function _zbz_load_image_marks(data) {
 // https://commons.wikimedia.org/wiki/Commons:Featured_pictures
 
 // add by zbz
-var image_urls = document.getElementById('image_urls_id').getAttribute('d')
+{#var image_urls = document.getElementById('image_urls_id').getAttribute('d')#}
 var image_marks = document.getElementById('image_mark_id').getAttribute('d')
+var contral = document.getElementById('contral_id').getAttribute('d')
+var contral_json = JSON.parse(contral)
 
-var urls_json = JSON.parse(image_urls)
+{#var urls_json = JSON.parse(image_urls)#}
+var urls_json = contral_json['image_urls']
 // end add by zbz
 
 // alert(str['urls'])
@@ -1231,7 +1253,10 @@ var _via_is_ctrl_pressed             = false;
 var _via_is_debug_mode               = false;
 
 // region
-var _via_current_shape             = VIA_REGION_SHAPE.RECT;
+      {#change by zbz #}
+{#var _via_current_shape             = VIA_REGION_SHAPE.RECT;#}
+var _via_current_shape = contral_json['region_shape'][0]
+{#end change#}
 var _via_current_polygon_region_id = -1;
 var _via_user_sel_region_id        = -1;
 var _via_click_x0 = 0; var _via_click_y0 = 0;
@@ -2309,14 +2334,37 @@ function _via_load_canvas_regions() {
   }
 }
 
+{#add by zbz#}
+function contains(arr, obj) {
+    var i = arr.length;
+    while (i--) {
+        if (arr[i] === obj) {
+            return true;
+        }
+    }
+    return false;
+}
+      {#end add#}
+
 // updates currently selected region shape
 function select_region_shape(sel_shape_name) {
   for ( var shape_name in VIA_REGION_SHAPE ) {
     var ui_element = document.getElementById('region_shape_' + VIA_REGION_SHAPE[shape_name]);
     ui_element.classList.remove('selected');
   }
+  var tmp_tag = 0
+  {#add by zbz#}
+  if (contains(contral_json['region_shape'],sel_shape_name))
+  {
+      _via_current_shape = sel_shape_name;
+  }
+  else {
+      tmp_tag=1
+      {#show_message('这次任务禁用该功能',20000)#}
+      _via_current_shape = contral_json['region_shape'][0]
+  }
+  {#end add #}
 
-  _via_current_shape = sel_shape_name;
   var ui_element = document.getElementById('region_shape_' + _via_current_shape);
   ui_element.classList.add('selected');
 
@@ -2324,8 +2372,17 @@ function select_region_shape(sel_shape_name) {
   case VIA_REGION_SHAPE.RECT: // Fall-through
   case VIA_REGION_SHAPE.CIRCLE: // Fall-through
   case VIA_REGION_SHAPE.ELLIPSE:
-    show_message('Press single click and drag mouse to draw ' +
+      {#change by zbz#}
+      if (tmp_tag) {
+        show_message('这次任务禁用该功能, Press single click and drag mouse to draw ' +
                  _via_current_shape + ' region');
+      }
+      else{
+          show_message('Press single click and drag mouse to draw ' +
+                 _via_current_shape + ' region');
+      }
+      {#end change#}
+
     break;
 
   case VIA_REGION_SHAPE.POLYLINE:
@@ -2333,8 +2390,17 @@ function select_region_shape(sel_shape_name) {
     _via_is_user_drawing_polygon = false;
     _via_current_polygon_region_id = -1;
 
-    show_message('[Single Click] to define polygon/polyline vertices, ' +
+    {#change by zbz#}
+    if (tmp_tag) {
+        show_message('[Single Click] to define polygon/polyline vertices, ' +
                  '[Backspace] to delete last vertex, [Enter] to finish, [Esc] to cancel drawing.' );
+    }
+    else{
+        show_message('[Single Click] to define polygon/polyline vertices, ' +
+                 '[Backspace] to delete last vertex, [Enter] to finish, [Esc] to cancel drawing.' );
+    }
+    {#end change#}
+
     break;
 
   case VIA_REGION_SHAPE.POINT:

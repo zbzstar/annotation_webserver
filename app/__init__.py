@@ -30,5 +30,5 @@ def creat_app():
 
 
 def register_blueprint(app):
-    from app.web.annotation import web
+    from app.web import web
     app.register_blueprint(web)

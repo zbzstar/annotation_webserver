@@ -2,7 +2,7 @@
 # @Time : 4/1/19 3:13 PM
 # @Author : zbz
 from flask import request, redirect, url_for, render_template, flash
-from flask_login import login_user
+from flask_login import login_user, logout_user
 
 from app.form.auth import RegisterForm, LoginForm
 from app.models.base import db
@@ -37,6 +37,13 @@ def login():
             flash('帐号不存在或密码不正确')
     return render_template('auth/login.html', form=form)
 
+
 @web.route('/reset/password', methods=['GET', 'POST'])
 def forget_password_request():
     pass
+
+
+@web.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('web.login'))

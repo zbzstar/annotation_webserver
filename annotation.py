@@ -4,9 +4,13 @@
 
 from app import creat_app
 import sys
+
+from app.tools.log import Logger
+
 sys.path.append('/home/zbz/tmp/jl_annotation/app')
 
 app = creat_app()
+log = Logger('./logs/jl_annotation.log', level='debug')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=app.config['DEBUG'],

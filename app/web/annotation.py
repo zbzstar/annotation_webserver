@@ -7,6 +7,7 @@ import json
 from flask import render_template, jsonify, request, current_app
 from flask_login import login_required,current_user
 
+from annotation import log
 from app import db
 from app.models.image import Image
 from app.models.work import Work
@@ -15,27 +16,25 @@ from . import web
 # from flask.ext.login import current_user
 
 raw_region_id = []
-
-
+# nick_name = ''
+contral = {}
+# contral['nickname'] = ''
 @web.route('/annotation', methods=['GET', 'POST'])
 @login_required
-def annotaion():
-
+def annotation():
     if request.method == 'POST':
-        # data = request.data.decode()  # change byte to str
         data = str(request.data, encoding='utf-8')
-        print("get post")
+        # print("get post")
+        log.logger.debug('get post')
         json_data = json.loads(data)  # load str as json
-        # print(json_data)
 
-        tmp_raw_region_id = raw_region_id
         for key in json_data:
             filename = json_data[key]['filename'].split('/')
 
             for anno in json_data[key]['regions']:
-                # print(anno)
                 if anno['id'] == 0:  # add new region
-                    print(anno)
+                    # print(anno)
+                    log.logger.debug(anno)
                     with db.auto_commit():
                         image = Image()
                         image.img_name = filename[-1]
@@ -59,7 +58,8 @@ def annotaion():
                             image.tag = anno['region_attributes']['name']
                             image.update_time = int(datetime.now().timestamp())
                     else:
-                        print("error... 有多次提交 复制导致错误")
+                        # print("error... 有多次提交 复制导致错误")
+                        log.logger.error('收到携带非法id的提交')
 
         if raw_region_id:  # 有标记被删除
             for r_id in raw_region_id:
@@ -135,12 +135,27 @@ def annotaion():
     #         "file_attributes": {}
     #     }
 
-    image_urls_json = json.dumps(image_urls)
+
+    contral['image_urls'] = image_urls
+    contral['image_marks'] = image_marks
+    contral['region_shape'] = []
+    region_shapes = db.session.query(
+                        Work.anno_type).filter_by(
+                        uid=uid).distinct().all()
+    for shape in region_shapes:
+        contral['region_shape'].append(shape[0])
+
+    # if not contral['nickname']:
+    contral['nickname'] = db.session.query(User.nickname).filter_by(id=uid).first()[0]
+
+    contral_json = json.dumps(contral)
+    # image_urls_json = json.dumps(image_urls)
     image_marks_json = json.dumps(image_marks)
 
     return render_template('via_wikimedia_demo.html',
-                           image_urls=image_urls_json,
-                           image_marks=image_marks_json)
+                           image_marks=image_marks_json,  # 前端函数内做的JSON.parse,保留
+                           contral=contral_json,
+                           nickname=contral['nickname'])
 
 
 # @login_required
@@ -159,8 +174,8 @@ def tmp_add_work():
     with db.auto_commit():
         work = Work()
         work.uid = uid
-        work.img_path = '4.jpeg'
-        work.anno_type = 'rect'
+        work.img_path = 'images/1.jpeg'
+        work.anno_type = 'circle'
         db.session.add(work)
 
 
