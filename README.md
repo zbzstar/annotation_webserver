@@ -10,14 +10,22 @@
   
   
 ## 功能
-1 多用户任务管理（详见流程图）  
-![图片服务器](https://note.youdao.com/yws/public/resource/43867abf6370ad9dda3961cc055802ff/xmlnote/0F6786CB85834EEDA7EAFE9BFFC517FD/14094)
-![用户登录](https://note.youdao.com/yws/public/resource/43867abf6370ad9dda3961cc055802ff/xmlnote/5FEA6086EF684CAA8CA3DBA36B936B99/14075)  
-![使用界面1](https://note.youdao.com/yws/public/resource/43867abf6370ad9dda3961cc055802ff/xmlnote/C900AAA8A8F54D8D9EF44FE1EEF53111/14077)  
-![使用界面2](https://note.youdao.com/yws/public/resource/43867abf6370ad9dda3961cc055802ff/xmlnote/7851220FB09945C0BDA2B406833D7813/14076)
-![使用界面3](https://note.youdao.com/yws/public/resource/43867abf6370ad9dda3961cc055802ff/xmlnote/DE793CD4DF9B4CB4925E527D8C2D6973/14079)
-![使用界面4](https://note.youdao.com/yws/public/resource/43867abf6370ad9dda3961cc055802ff/xmlnote/91957540EF1F4FB8B2DA99A44F254905/14081)
-![使用界面5](https://note.youdao.com/yws/public/resource/43867abf6370ad9dda3961cc055802ff/xmlnote/9490D1A6083D4E6E8063867CCF182FF5/14090)
+1 多用户任务管理（详见流程图）
+图片服务器   
+![图片服务器](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show6.png)
+必须先登才可以看到标记页面  
+![用户登录](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show1.png)
+读取用户任务    
+![使用界面1](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show2.png)
+标记并上传    
+![使用界面2](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show3.png)
+退出登录  
+![使用界面3](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show4.png)
+新用户登录  
+![使用界面4](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show5.png)
+读取新用户任务（通过后台对不用用户分配不同任务，分配是可以指定标记类型--rect,矩形 rect, circle, ellipse, point, polyline, polygon）    
+![使用界面5](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show6.png)
+
 
 2 多种标记形式, 
 ![如图](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show.jpg)  
