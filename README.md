@@ -14,16 +14,16 @@
 图片服务器   
 ![图片服务器](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show6.png)
 必须先登才可以看到标记页面  
-![用户登录](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show1.png)
+![用户登录](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show1.jpg)
 读取用户任务    
-![使用界面1](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show2.png)
+![使用界面1](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show2.jpg)
 标记并上传    
 ![使用界面2](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show3.png)
 退出登录  
 ![使用界面3](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show4.png)
 新用户登录  
-![使用界面4](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show5.png)
-读取新用户任务（通过后台对不用用户分配不同任务，分配是可以指定标记类型--rect,矩形 rect, circle, ellipse, point, polyline, polygon）    
+![使用界面4](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show5.jpg)
+读取新用户任务（通过后台对不用用户分配不同任务，分配时可以指定标记类型--rect, circle, ellipse, point, polyline, polygon）    
 ![使用界面5](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show6.png)
 
 
