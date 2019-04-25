@@ -10,7 +10,10 @@
   
   
 ## 功能
-1 多用户任务管理（详见流程图）
+1 辅助标记  
+![如图](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/1556177050691.gif)
+
+2 多用户任务管理（详见流程图）
 图片服务器   
 ![图片服务器](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show6.png)  
 必须先登才可以看到标记页面  
@@ -27,8 +30,6 @@
 ![使用界面5](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show6.png)  
 
 
-2 多种标记形式,   
+3 多种标记形式,   
 ![如图](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show.jpg)  
 
-3 辅助标记  
-![如图](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/1556177050691.gif)
