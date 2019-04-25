@@ -30,6 +30,3 @@
 ![使用界面5](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show6.png)  
 
 
-3 多种标记形式,   
-![如图](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show.jpg)  
-
