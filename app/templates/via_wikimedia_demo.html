@@ -391,6 +391,9 @@
         <symbol id="icon_filedownload">
           <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
         </symbol>
+        <symbol id="icon_getcurve">
+          <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"></path>
+        </symbol>
       </defs>
     </svg>
 
@@ -493,6 +496,7 @@
 {#          change by zbz#}
 {#        <svg onclick="download_all_region_data('csv')" viewbox="0 0 24 24"><use xlink:href="#icon_filedownload"></use><title>Download Annotations as CSV</title></svg>#}
 {#end change#}
+        <svg onclick="sel_local_data_file('curvepoints')" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_getcurve"></use><title>Get Curve-Points from Curve-GCN</title></svg>
         <svg onclick="image_grid_toggle()" id="toolbar_image_grid_toggle" style="margin-left:1rem;" viewbox="0 0 24 24"><use xlink:href="#icon_gridon"></use><title>Switch to Image Grid View</title></svg>
         <svg onclick="annotation_editor_toggle_all_regions_editor()" viewbox="0 0 24 24"><use xlink:href="#icon_insertcomment"></use><title>Toggle Annotation Editor</title></svg>
 
@@ -1628,27 +1632,162 @@ function download_all_region_data(type) {
   save_data_to_local_file(all_region_data_blob, 'via_region_data.'+type);
 }
 
-// add by zbz
-function post_img_meta_data() {
+// add by zbz  0425
+function update_img_meta_data() {
+  var tmp = _via_img_metadata;
+  tmp['type'] = 'upload';
+  _via_img_metadata = {}
+   _via_img_src     = {}
   $.ajax({
                 type: 'POST',
-                url: "http://localhost:5200/annotation",
+                url: "http://172.16.150.198:5200/annotation",
                 dataType: "json",
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8'
                 },
-                data: JSON.stringify(_via_img_metadata)
+                data: JSON.stringify(tmp),
                 // _via_img_metadata
 
                 // crossDomain:true,
                 // xhrFields:{ withCredentials: true},
-                // success: function (data) {
-                //     console.log( data)
-                //     // $("#msg").text(JSON.stringify(data, null, 4));
-                // }
+                success: function (data) {
+                     console.log( data)
+                    // $("#image_mark_id").text(JSON.stringify(data, null, 4));
+                     updata_metadata_from_json(JSON.stringify(data, null, 4))
+                }
             });
 
 }
+function get_curve_data() {
+  var tmp = _via_img_metadata;
+  tmp['type'] = 'curve';
+  _via_img_metadata = {}
+  $.ajax({
+                type: 'POST',
+                url: "http://172.16.150.198:5200/annotation",
+                dataType: "json",
+                headers: {
+                    'Content-Type': 'application/json;charset=UTF-8'
+                },
+                data: JSON.stringify(tmp),
+                // _via_img_metadata
+
+                // crossDomain:true,
+                // xhrFields:{ withCredentials: true},
+                success: function (data) {
+                     console.log( data)
+                    // $("#image_mark_id").text(JSON.stringify(data, null, 4));
+                     updata_metadata_from_json(JSON.stringify(data, null, 4))
+                }
+            });
+
+}
+
+function updata_metadata_from_json(data)
+{
+    return new Promise( function(ok_callback, err_callback) {
+    if (data === '' || typeof(data) === 'undefined') {
+      return;
+    }
+
+    var d = JSON.parse(data);
+
+    var region_import_count = 0;
+    var file_added_count    = 0;
+    var malformed_entries_count    = 0;
+    for (var img_id in d) {
+      var filename = d[img_id].filename;
+      var size     = d[img_id].size;
+      var comp_img_id = _via_get_image_id(filename, size);
+      if ( comp_img_id !== img_id ) {
+        // discard malformed entry
+        malformed_entries_count += 1;
+        continue;
+      }
+
+      if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
+        img_id = project_add_new_file(filename, size);
+        if ( _via_settings.core.default_filepath === '' ) {
+          _via_img_src[img_id] = filename;
+        } else {
+          _via_file_resolve_file_to_default_filepath(img_id);
+        }
+        //file_added_count += 1;
+      }
+
+      // copy file attributes
+      var key;
+      for ( key in d[img_id].file_attributes ) {
+        if ( key === '' ) {
+          continue;
+        }
+
+        _via_img_metadata[img_id].file_attributes[key] = d[img_id].file_attributes[key];
+
+         //add this file attribute to _via_attributes
+        if ( ! _via_attributes['file'].hasOwnProperty(key) ) {
+          _via_attributes['file'][key] = { 'type':'text' };
+        }
+      }
+
+      // copy regions
+      var regions = d[img_id].regions;
+      var key, i;
+      for ( i in regions ) {
+        var region_i = new file_region();
+        for ( key in regions[i].shape_attributes ) {
+          region_i.shape_attributes[key] = regions[i].shape_attributes[key];
+        }
+        for ( var key in regions[i].region_attributes ) {
+          if ( key === '' ) {
+            continue;
+          }
+
+          region_i.region_attributes[key] = regions[i].region_attributes[key];
+
+          // add this region attribute to _via_attributes
+          if ( ! _via_attributes['region'].hasOwnProperty(key) ) {
+            _via_attributes['region'][key] = { 'type':'text' };
+          }
+        }
+        // add by zbz
+        region_i.id =  regions[i].id
+        //end add
+
+        // add regions only if they are present
+        if ( Object.keys(region_i.shape_attributes).length > 0 ||
+             Object.keys(region_i.region_attributes).length > 0 ) {
+          _via_img_metadata[img_id].regions.push(region_i);
+          region_import_count += 1;
+        }
+      }
+    }
+    show_message('Import Summary : [' + file_added_count + '] new files, ' +
+                 '[' + region_import_count + '] regions, ' +
+                 '[' + malformed_entries_count + '] malformed entries.');
+
+    if ( file_added_count ) {
+      update_img_fn_list();
+    }
+
+    if ( _via_current_image_loaded ) {
+      if ( region_import_count ) {
+        update_attributes_update_panel();
+        annotation_editor_update_content();
+        _via_load_canvas_regions(); // image to canvas space transform
+        // _via_redraw_reg_canvas();
+        _via_reg_canvas.focus();
+      }
+    } else {
+      if ( file_added_count ) {
+        _via_show_img(0);
+      }
+    }
+
+    ok_callback([file_added_count, region_import_count, malformed_entries_count]);
+  });
+}
+//end add 0425
 
 
 function sel_local_data_file(type) {
@@ -1656,15 +1795,23 @@ function sel_local_data_file(type) {
     switch(type) {
     case 'annotations':
       // add by zbz
-      console.log("test zbz")
-      post_img_meta_data()
+      // console.log("test zbz")
+      update_img_meta_data()
       // console.log(_via_img_metadata)
       return
       // end by zbz
 
-      invisible_file_input.accept='.csv,.json';
-      invisible_file_input.onchange = import_annotations_from_file;
-      break;
+      // modified by zbz
+      // invisible_file_input.accept='.csv,.json';
+      // invisible_file_input.onchange = import_annotations_from_file;
+      // break;
+      // end modify
+
+    // add by zbz
+    case 'curvepoints':
+        get_curve_data()
+        return
+    // end add
 
     case 'files_url':
       invisible_file_input.accept='';

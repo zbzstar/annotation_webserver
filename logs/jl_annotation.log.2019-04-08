@@ -1,0 +1,4 @@
+2019-04-23 17:25:06,226 - /home/zbz/tmp/jl_annotation/app/web/annotation.py[line:28] - DEBUG: get post
+2019-04-23 17:25:06,334 - /home/zbz/tmp/jl_annotation/app/web/annotation.py[line:37] - DEBUG: {'shape_attributes': {'name': 'polygon', 'all_points_x': [402, 445, 452, 438, 411, 397, 383, 373], 'all_points_y': [279, 283, 363, 417, 427, 424, 426, 392]}, 'region_attributes': {}, 'id': 0}
+2019-04-23 17:25:51,850 - /home/zbz/tmp/jl_annotation/app/web/annotation.py[line:28] - DEBUG: get post
+2019-04-23 17:25:51,968 - /home/zbz/tmp/jl_annotation/app/web/annotation.py[line:37] - DEBUG: {'shape_attributes': {'name': 'polygon', 'all_points_x': [402, 445, 452, 438, 411, 397, 383, 373], 'all_points_y': [279, 283, 363, 417, 427, 424, 426, 392]}, 'region_attributes': {'name': 'tt'}, 'id': 0}
