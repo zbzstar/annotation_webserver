@@ -29,3 +29,6 @@
 
 2 多种标记形式, 
 ![如图](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/show.jpg)  
+
+3 辅助标记
+![如图](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/1556177050691.gif)
