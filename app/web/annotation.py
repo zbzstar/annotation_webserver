@@ -32,44 +32,35 @@ def annotation():
         json_data = json.loads(data)  # load str as json
         curve_flag = False
         if json_data['type'] == 'curve':
+            json_data.pop('type')
             curve_flag = True
+        multi_region_update_data=[]
+        remove_idx = {}
         for key in json_data:
             if key == "type":
                 continue
             filename = json_data[key]['filename'].split('/')
+            remove_idx[key] =[]
             for anno in json_data[key]['regions']:
                 if anno['id'] == 0:  # add new region
-
-                    # get curve points
+                    # get all curve rect
                     if anno['shape_attributes']['name'] == 'rect' and curve_flag:
+                        remove_idx[key].append(anno)
                         region = []
                         region.append(anno['shape_attributes']['x'])
                         region.append(anno['shape_attributes']['y'])
                         region.append(anno['shape_attributes']['width'])
                         region.append(anno['shape_attributes']['height'])
                         img_path = json_data[key]['filename']
-
-                        r = get_curve_points(img_path, region)
-                        poly = np.array(r['poly'])
-                        poly = np.trunc(poly).astype(np.int16)
-                        curve_string = {
-                            'name': 'polygon',
-                            'all_points_x': poly[:, 0].tolist(),
-                            'all_points_y': poly[:, 1].tolist(),
+                        d = {
+                            'img_path': img_path,
+                            'regions': {
+                                'bbox': region
+                            }
                         }
-                        # save curve points 只保存新获取curve points,不保存矩形框
-                        with db.auto_commit():
-                            image = Image()
-                            image.img_name = filename[-1]
-                            image.img_path = str('/'.join(filename[3:]))
-                            image.anno_type = 'polygon'
-                            image.anno_string = str(curve_string).replace(' ', '')
-                            if anno['region_attributes']:
-                                image.tag = anno['region_attributes']['name']
-                            else:
-                                image.tag = "Default"
-                            db.session.add(image)
-                    else:
+                        multi_region_update_data.append(d)
+
+                    elif not curve_flag:  # 如果是curve 就不更新其它信息
                         with db.auto_commit():
                             image = Image()
                             image.img_name = filename[-1]
@@ -83,7 +74,7 @@ def annotation():
                             else:
                                 image.tag = "Default"
                             db.session.add(image)
-                else:
+                elif not curve_flag:
                     if anno['id'] in raw_region_id:
                         raw_region_id.remove(anno['id'])   # 有返回，未被删除
                         with db.auto_commit():
@@ -97,6 +88,43 @@ def annotation():
                         log.logger.error('收到携带非法id的提交')
                         log.logger.error(anno['id'])
 
+        if multi_region_update_data:  # 一定是获取
+            r = get_curve_points(multi_region_update_data)
+            for data in r:
+                # filename = data['img_path'].split('/')
+                poly = np.array(data['poly'])
+                poly = np.trunc(poly).astype(np.int16)
+                curve_string = {
+                    'name': 'polygon',
+                    'all_points_x': poly[:, 0].tolist(),
+                    'all_points_y': poly[:, 1].tolist(),
+                }
+                key = data['img_path'] + '-1'
+                anno_info = {
+                    'shape_attributes':curve_string,
+                    'region_attributes':{"name": 'Default'},
+                    'id': 0
+                }
+
+                json_data[key]['regions'].append(anno_info)
+                # json_data[key] = mark_info_
+            for re_key in remove_idx:
+                if remove_idx[re_key]: # not null
+                    for anno in remove_idx[re_key]:
+                        json_data[key]['regions'].remove(anno)
+            json_data = json.dumps(json_data)
+            return json_data
+                # with db.auto_commit():
+                #     image = Image()
+                #     image.img_name = filename[-1]
+                #     image.img_path = str('/'.join(filename[3:]))
+                #     image.anno_type = 'polygon'
+                #     image.anno_string = str(curve_string).replace(' ', '')
+                #     # if anno['region_attributes']:
+                #     #     image.tag = anno['region_attributes']['name']
+                #     # else:
+                #     image.tag = "Default"
+                #     db.session.add(image)
         if raw_region_id:  # 有标记被删除
             for r_id in raw_region_id:
                 raw_region_id.remove(r_id)
@@ -198,7 +226,8 @@ def annotation():
     return render_template('via_wikimedia_demo.html',
                            image_marks=image_marks_json,  # 前端函数内做的JSON.parse,保留
                            contral=contral_json,
-                           nickname=contral['nickname'])
+                           nickname=contral['nickname'],
+                           anno_server=current_app.config['ANNO_SERVER'])
 
 
 # @login_required
@@ -228,13 +257,16 @@ def get_all_img_path():
     return img_pathes
 
 
-def get_curve_points(img_path, region):
+def get_curve_points(mutil_regions):
     curve_point_curl = current_app.config['CURVE_CURL']
-    d = {
-        'img_path': img_path,
-        'region': {
-            'bbox': region
-        }
-    }
-    r = requests.post(curve_point_curl, data=json.dumps(d))
+    # input_data = []
+    # d = {
+    #     'img_path': img_path,
+    #     'regions': {
+    #         'bbox': region
+    #     }
+    # }
+    # input_data.append(d)
+    # print("===========",input_data)
+    r = requests.post(curve_point_curl, data=json.dumps(mutil_regions))
     return json.loads(r.text)

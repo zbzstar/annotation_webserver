@@ -276,6 +276,7 @@
 {#    <div id="image_urls_id" d="{{image_urls}}" style="display:none"> > </div>#}
     <div id="image_mark_id" d="{{image_marks}}" style="display:none"> > </div>
     <div id="contral_id" d="{{contral}}" style="display:none"> > </div>
+    <div id="anno_server_id" d="{{anno_server}}" style="display:none"> > </div>
     <!--end add by zbz-->
 
     <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -1640,7 +1641,8 @@ function update_img_meta_data() {
    _via_img_src     = {}
   $.ajax({
                 type: 'POST',
-                url: "http://172.16.150.198:5200/annotation",
+                {#url: "http://172.16.150.198:5200/annotation",#}
+                url:document.getElementById('anno_server_id').getAttribute('d'),
                 dataType: "json",
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8'
@@ -1664,7 +1666,7 @@ function get_curve_data() {
   _via_img_metadata = {}
   $.ajax({
                 type: 'POST',
-                url: "http://172.16.150.198:5200/annotation",
+                url: document.getElementById('anno_server_id').getAttribute('d'),
                 dataType: "json",
                 headers: {
                     'Content-Type': 'application/json;charset=UTF-8'

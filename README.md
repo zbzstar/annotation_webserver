@@ -11,7 +11,8 @@
   
 ## 功能
 1 辅助标记  
-![如图](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/1556177050691.gif)
+![多个标记](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/muti.gif)
+![一个标记](https://github.com/zbzstar/pictures_markdown/blob/master/annotation/1556177050691.gif)
 
 2 多用户任务管理（详见流程图）
 图片服务器   
