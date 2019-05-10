@@ -59,7 +59,19 @@ def annotation():
                             }
                         }
                         multi_region_update_data.append(d)
-
+                    elif anno['shape_attributes']['name'] == 'polygon' and curve_flag:
+                        remove_idx[key].append(anno)
+                        poly_list = []
+                        for i in range(len(anno['shape_attributes']['all_points_x'])):
+                            poly_list.append([anno['shape_attributes']['all_points_x'][i], anno['shape_attributes']['all_points_y'][i]])
+                        d = {
+                            'img_path': json_data[key]['filename'],
+                            'regions': {
+                                'poly': poly_list
+                            }
+                        }
+                        multi_region_update_data.append(d)
+                        pass
                     elif not curve_flag:  # 如果是curve 就不更新其它信息
                         with db.auto_commit():
                             image = Image()
